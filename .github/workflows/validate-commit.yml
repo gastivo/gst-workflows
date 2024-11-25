@@ -12,6 +12,12 @@ jobs:
 
       - name: Validate commit messages
         run: |
+          # Sicherstellen, dass ein vorheriger Commit existiert
+          if [ -z "${{ github.event.before }}" ]; then
+            echo "No previous commit, skipping commit message validation."
+            exit 0
+          fi
+          
           JIRA_REGEX="[A-Z]+-[0-9]+"
           COMMITS=$(git log --format=%B ${{ github.event.before }}..${{ github.sha }})
           for COMMIT_MSG in $COMMITS; do
