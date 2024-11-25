@@ -1,0 +1,33 @@
+name: Validate Commit Messages
+
+on:
+  workflow_call:
+    inputs:
+      branches:
+        required: false
+        type: string
+        description: "Branches to validate (regex pattern)"
+    secrets:
+      JIRA_API_TOKEN:
+        required: true
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate commit messages
+        run: |
+          JIRA_REGEX="[A-Z]+-[0-9]+"
+          COMMITS=$(git log --format=%B ${{ github.event.before }}..${{ github.sha }})
+          BRANCHES="${{ inputs.branches }}"
+
+          for COMMIT_MSG in $COMMITS; do
+            if ! echo "$COMMIT_MSG" | grep -qE "$JIRA_REGEX"; then
+              echo "❌ Commit '$COMMIT_MSG' is missing a valid JIRA ticket."
+              exit 1
+            fi
+          done
+          echo "✅ All commit messages are valid."
